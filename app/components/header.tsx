@@ -16,7 +16,7 @@ export default function Header() {
 
   return (
     <header
-      className={`${inter.className} fixed top-0 left-0 right-0 z-[999] h-[75px] flex items-center justify-between px-6 sm:px-8 backdrop-blur-lg bg-white/20 border-b border-white/30 shadow-lg transition-all duration-300`}
+      className={`${inter.className} fixed top-0 left-0 right-0 z-[900] h-[75px] flex items-center justify-between px-6 sm:px-8 backdrop-blur-lg bg-white/20 border-b border-white/30 shadow-lg transition-all duration-300`}
     >
       {/* Logo */}
       <div>

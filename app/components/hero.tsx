@@ -11,7 +11,7 @@ const playfair = Playfair_Display({
 export default function Hero() {
   return (
     <section
-      className={`bg-[#E5E5E5] flex flex-col md:flex-row items-center justify-center h-screen px-6 md:px-16 gap-12 ${playfair.className} pt-19 md:pt-10` }
+      className={`bg-[#E5E5E5] flex flex-col md:flex-row items-center justify-center h-screen px-6 md:px-16 gap-12 ${playfair.className} pt-19 md:pt-10 sticky  ` }
     >
       {/* Left Side - Text */}
       <div className="flex-1 text-center md:text-left">
@@ -23,7 +23,7 @@ export default function Hero() {
           <span className="md:text-5xl text-4xl text-[#fca311]">W</span>e
           Prosper.
         </h2>
-        <p className="mt-6 text-[#000000] font-medium text-lg md:text-xl leading-relaxed max-w-xl mx-auto md:mx-0">
+        <p className="mt-6 text-[#000000] font-light text-lg md:text-xl leading-relaxed max-w-xl mx-auto md:mx-0">
           At Prospera, we harness the power of AI and cutting-edge technology to
           break the cycle of poverty and create opportunities for all. Our
           mission is to build a world where every individual thrives —

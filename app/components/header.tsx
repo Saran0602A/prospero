@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import React, { useState } from 'react'
-import { Inter } from 'next/font/google'
+import { Inter } from '@next/font/google'
 import { FiMenu, FiX } from 'react-icons/fi'
 
 // Import Inter font
@@ -20,9 +20,9 @@ export default function Header() {
     >
       {/* Logo */}
       <div>
-        <h1 className="text-3xl font-extrabold text-[#000000] tracking-tight drop-shadow-lg">
+        <h1 className="text-3xl font-extrabold text-[#000000] tracking-tight ">
           Pros
-          <span className="text-[#14213d] font-semibold">pero</span>
+          <span className="text-[#14213d] font-medium">pero</span>
           <sup className="text-[#14213d] font-bold text-xl">.</sup>
         </h1>
       </div>

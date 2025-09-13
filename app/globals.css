@@ -1,2 +1,25 @@
 @import "tailwindcss";
 
+
+::-moz-selection {
+  background-color: #fca311;
+  color: #ffffff;
+}
+
+::selection {
+  background-color: #fca311;
+  color:#ffffff;
+}
+
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}

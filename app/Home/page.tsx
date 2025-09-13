@@ -3,8 +3,9 @@ import React from 'react'
 import Header from '../components/header'
 import Hero from '../components/hero'
 import Footer from '../components/footer'
-import About from '../components/about'
-import Offer from '../components/offer'
+import Whatis from '../components/whatis'
+import Features from '../components/features';
+import Ready from '../components/ready'
 
 export default function page() {
   return (
@@ -12,9 +13,9 @@ export default function page() {
    
   <Header />
   <Hero />
-  <About />
-  <Offer/>
-  
+  <Whatis/>
+  <Features />
+  <Ready />
   <Footer />
 </div>
 

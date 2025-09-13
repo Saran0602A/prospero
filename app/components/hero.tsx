@@ -11,7 +11,7 @@ const playfair = Playfair_Display({
 export default function Hero() {
   return (
     <section
-      className={`bg-[#E5E5E5] flex flex-col md:flex-row items-center justify-center h-screen px-6 md:px-16 gap-12 ${playfair.className} pt-19 md:pt-10 sticky z-[900] ` }
+      className={`bg-[#E5E5E5] flex flex-col md:flex-row items-center justify-center h-screen px-6 md:px-16 gap-12 ${playfair.className} pt-19 md:pt-10 sticky z-[700] ` }
     >
       {/* Left Side - Text */}
       <div className="flex-1 text-center md:text-left">

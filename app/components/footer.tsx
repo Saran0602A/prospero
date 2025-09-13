@@ -89,7 +89,7 @@ export default function Footer() {
         className={`flex flex-col items-center justify-center text-center py-8 bg-[#fca311] ${anton.className}`}
       >
         <h2 className="text-white text-4xl md:text-5xl tracking-wide">
-          LET’S RISE BY LIFTING OTHERS
+         -LET’S RISE BY LIFTING OTHERS-
         </h2>
         <span className="text-white text-5xl md:text-7xl font-extrabold mt-2">
           PROSPERA

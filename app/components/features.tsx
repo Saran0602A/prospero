@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Playfair_Display } from "@next/font/google";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -9,10 +10,20 @@ const playfair = Playfair_Display({
 });
 
 export default function Features() {
+  const { scrollYProgress } = useScroll();
+
+  // Parallax effect for image (slight 3D floating feel)
+  const yImage = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const rotateImage = useTransform(scrollYProgress, [0, 1], ["0deg", "8deg"]);
+  const scaleImage = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
+
+  // Parallax for text (slide upward while fading in)
+  const yText = useTransform(scrollYProgress, [0, 1], ["50%", "-10%"]);
+  const opacityText = useTransform(scrollYProgress, [0.2, 0.4], [0, 1]);
+
   return (
-    <section className="w-full flex flex-col sticky top-0 z-[900] items-center justify-center px-8 py-20 bg-white">
-      
-      {/* Title on Top */}
+    <section className="w-full flex flex-col sticky top-0 z-[702] items-center justify-center px-8 py-32 bg-white">
+      {/* Title */}
       <h2
         className={`${playfair.className} text-4xl md:text-5xl font-semibold mb-12 text-center`}
       >
@@ -20,20 +31,35 @@ export default function Features() {
       </h2>
 
       <div className="flex flex-col md:flex-row items-center justify-center w-full">
-        {/* Left Side - Illustration / Image */}
-        <div className="md:w-1/2 flex justify-center mb-10 md:mb-0">
+        {/* Left Side - Parallax Illustration */}
+        <motion.div
+          style={{
+            y: yImage,
+            rotate: rotateImage,
+            scale: scaleImage,
+          }}
+          className="md:w-1/2 flex justify-center mb-10 md:mb-0"
+        >
           <img
             src="/featureimg.png"
             alt="Prospero illustration"
-            className="rounded-xl shadow-lg w-[90%] md:w-[80%] animate-float"
-            style={{ animation: "float 3s ease-in-out infinite", objectFit: "contain", }}
+            className="rounded-xl shadow-2xl w-[90%] md:w-[80%]"
           />
-        </div>
+        </motion.div>
 
-        {/* Right Side - Steps */}
-        <div className="md:w-1/2 space-y-10">
+        {/* Right Side - Steps with Vertical Parallax */}
+        <motion.div
+          style={{ y: yText, opacity: opacityText }}
+          className="md:w-1/2 space-y-10"
+        >
           {/* Step 1 */}
-          <div className="flex items-start space-x-4">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="flex items-start space-x-4"
+          >
             <span className="text-3xl font-bold text-green-600">1</span>
             <div>
               <h3 className="text-xl font-semibold">
@@ -47,10 +73,16 @@ export default function Features() {
                 Learn More
               </button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Step 2 */}
-          <div className="flex items-start space-x-4">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="flex items-start space-x-4"
+          >
             <span className="text-3xl font-bold text-yellow-500">2</span>
             <div>
               <h3 className="text-xl font-semibold">DonorConnect Program</h3>
@@ -62,10 +94,16 @@ export default function Features() {
                 Contribute
               </button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Step 3 */}
-          <div className="flex items-start space-x-4">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            viewport={{ once: true }}
+            className="flex items-start space-x-4"
+          >
             <span className="text-3xl font-bold text-blue-600">3</span>
             <div>
               <h3 className="text-xl font-semibold">
@@ -79,8 +117,8 @@ export default function Features() {
                 Explore Jobs
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );

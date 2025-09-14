@@ -4,14 +4,18 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Inter } from '@next/font/google';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MdEmail, MdLock, MdPhone } from 'react-icons/md';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import bcrypt from 'bcryptjs';
+import { useRouter } from 'next/navigation';
 
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 const supabase = createClientComponentClient();
 
 export default function SignupPage() {
+  const router = useRouter();
+
   const [fullName, setFullName] = useState('');
   const [highestStudy, setHighestStudy] = useState('');
   const [ctc, setCtc] = useState('');
@@ -24,7 +28,6 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   const [otpTarget, setOtpTarget] = useState<{ email?: string; phone?: string }>({});
 
   useEffect(() => {
@@ -51,7 +54,7 @@ export default function SignupPage() {
       const target = email ? { email } : { phone };
       setOtpTarget(target);
 
-      const { data, error } = await supabase.auth.signInWithOtp(target);
+      const { error } = await supabase.auth.signInWithOtp(target);
       if (error) throw error;
 
       setStep('otp');
@@ -82,7 +85,7 @@ export default function SignupPage() {
         const { data, error } = await supabase.auth.verifyOtp({
           email: otpTarget.email,
           token: otpCode,
-          type: 'magiclink', // must be 'magiclink' for email OTP
+          type: 'signup',
         });
         if (error) throw error;
         user = data.user;
@@ -98,7 +101,7 @@ export default function SignupPage() {
 
       if (!user?.id) throw new Error('User not found after OTP verification');
 
-      // Save user data in your table
+      // Save user data in your custom table
       const hashedPassword = bcrypt.hashSync(password, 10);
       const { error: dataError } = await supabase.from('users_data').insert({
         user_id: user.id,
@@ -112,17 +115,8 @@ export default function SignupPage() {
       });
       if (dataError) throw dataError;
 
-      setSuccessMsg('OTP verified! Signup complete.');
-      setStep('signup');
-      setFullName('');
-      setHighestStudy('');
-      setCtc('');
-      setEmail('');
-      setPhone('');
-      setPassword('');
-      setOtpCode('');
-      setPendingUserId(null);
-      setOtpTarget({});
+      setSuccessMsg('Signup successful! Redirecting...');
+      setTimeout(() => router.push('/'), 1500);
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
@@ -131,56 +125,75 @@ export default function SignupPage() {
   };
 
   return (
-    <div className={`${inter.className} w-full min-h-screen bg-[#e5e5e5] flex items-center justify-center p-6`}>
+    <div className={`${inter.className} w-full min-h-screen grid grid-cols-1 md:grid-cols-2 bg-gray-100`}>
+      
+      {/* Left Side - Form */}
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-center p-6 md:p-12 bg-white"
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg"
       >
-        <h2 className="text-3xl font-bold mb-6 text-center text-[#14213d]">
-          {step === 'signup' ? 'Create Your Account' : 'Verify OTP'}
-        </h2>
+        <div className="w-full max-w-md">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-[#14213d] mb-4">
+            {step === 'signup' ? 'Join' : 'Verify OTP'}{' '}
+            <span className="text-[#fca311]">Prospero</span>
+          </h2>
+          <p className="text-center text-gray-600 mb-6">
+            {step === 'signup' ? 'Create your account' : 'Enter the OTP sent to you'}
+          </p>
 
-        {step === 'signup' ? (
-          <div className="flex flex-col gap-4">
-            <input type="text" placeholder="Full Name" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full border px-4 py-3 rounded-xl outline-none" />
-            <input type="text" placeholder="Highest Study" value={highestStudy} onChange={e => setHighestStudy(e.target.value)} className="w-full border px-4 py-3 rounded-xl outline-none" />
-            <input type="number" placeholder="CTC" value={ctc} onChange={e => setCtc(e.target.value)} className="w-full border px-4 py-3 rounded-xl outline-none" />
-            <div className="flex items-center gap-3 border px-4 py-3 rounded-xl">
-              <MdEmail className="text-gray-500 w-5 h-5" />
-              <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="flex-1 outline-none" />
+          {step === 'signup' ? (
+            <div className="flex flex-col gap-4">
+              <input type="text" placeholder="Full Name" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full border px-4 py-3 rounded-xl outline-none" />
+              <input type="text" placeholder="Highest Study" value={highestStudy} onChange={e => setHighestStudy(e.target.value)} className="w-full border px-4 py-3 rounded-xl outline-none" />
+              <input type="number" placeholder="CTC" value={ctc} onChange={e => setCtc(e.target.value)} className="w-full border px-4 py-3 rounded-xl outline-none" />
+              <div className="flex items-center gap-3 border px-4 py-3 rounded-xl">
+                <MdEmail className="text-gray-500 w-5 h-5" />
+                <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="flex-1 outline-none" />
+              </div>
+              <div className="flex items-center gap-3 border px-4 py-3 rounded-xl">
+                <MdPhone className="text-gray-500 w-5 h-5" />
+                <input type="tel" placeholder="Phone (optional)" value={phone} onChange={e => setPhone(e.target.value)} className="flex-1 outline-none" />
+              </div>
+              <div className="flex items-center gap-3 border px-4 py-3 rounded-xl">
+                <MdLock className="text-gray-500 w-5 h-5" />
+                <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="flex-1 outline-none" />
+              </div>
+              <button onClick={handleSendOtp} disabled={loading} className="w-full bg-[#fca311] text-white py-3 rounded-xl font-medium shadow-lg mt-2">
+                {loading ? 'Sending OTP...' : 'Send OTP'}
+              </button>
             </div>
-            <div className="flex items-center gap-3 border px-4 py-3 rounded-xl">
-              <MdPhone className="text-gray-500 w-5 h-5" />
-              <input type="tel" placeholder="Phone (optional)" value={phone} onChange={e => setPhone(e.target.value)} className="flex-1 outline-none" />
+          ) : (
+            <div className="flex flex-col gap-4">
+              <input type="text" placeholder="Enter OTP" value={otpCode} onChange={e => setOtpCode(e.target.value)} className="w-full border px-4 py-3 rounded-xl outline-none" />
+              <p className="text-gray-500 text-sm">OTP expires in {otpCountdown}s</p>
+              <button onClick={handleVerifyOtp} disabled={loading || otpCountdown <= 0} className="w-full bg-[#fca311] text-white py-3 rounded-xl font-medium shadow-lg mt-2">
+                {loading ? 'Verifying...' : 'Verify OTP'}
+              </button>
+              <p onClick={() => setStep('signup')} className="text-sm text-center text-gray-600 mt-2 cursor-pointer hover:underline">← Back</p>
             </div>
-            <div className="flex items-center gap-3 border px-4 py-3 rounded-xl">
-              <MdLock className="text-gray-500 w-5 h-5" />
-              <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="flex-1 outline-none" />
-            </div>
-            <button onClick={handleSendOtp} disabled={loading} className="w-full bg-[#fca311] text-white py-3 rounded-xl font-medium shadow-lg mt-2">
-              {loading ? 'Sending OTP...' : 'Send OTP'}
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <input type="text" placeholder="Enter OTP" value={otpCode} onChange={e => setOtpCode(e.target.value)} className="w-full border px-4 py-3 rounded-xl outline-none" />
-            <p className="text-gray-500 text-sm">OTP expires in {otpCountdown}s</p>
-            <button onClick={handleVerifyOtp} disabled={loading || otpCountdown <= 0} className="w-full bg-[#fca311] text-white py-3 rounded-xl font-medium shadow-lg mt-2">
-              {loading ? 'Verifying...' : 'Verify OTP'}
-            </button>
-            <p onClick={() => setStep('signup')} className="text-sm text-center text-gray-600 mt-2 cursor-pointer hover:underline">← Back</p>
-          </div>
-        )}
+          )}
 
-        {successMsg && <p className="text-green-600 mt-2 text-sm">{successMsg}</p>}
-        {errorMsg && <p className="text-red-500 mt-2 text-sm">{errorMsg}</p>}
+          {successMsg && <p className="text-green-600 mt-2 text-sm">{successMsg}</p>}
+          {errorMsg && <p className="text-red-500 mt-2 text-sm">{errorMsg}</p>}
 
-        <p className="text-center text-gray-700 mt-6">
-          Already have an account?{' '}
-          <Link href="/Signin" className="text-[#fca311] font-medium hover:underline">Sign In</Link>
-        </p>
+          <p className="text-center text-gray-700 mt-6">
+            Already have an account?{' '}
+            <Link href="/Signin" className="text-[#fca311] font-medium hover:underline">Sign In</Link>
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Right Side - Image */}
+      <motion.div
+        className="relative w-full h-80 md:h-full overflow-hidden"
+        initial={{ x: 50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 1 }}
+      >
+        <Image src="/ricefield.gif" alt="Signup illustration" fill className="object-cover" priority />
+        <motion.div className="absolute inset-0 bg-black/25" initial={{ opacity: 0 }} animate={{ opacity: 0.25 }} />
       </motion.div>
     </div>
   );

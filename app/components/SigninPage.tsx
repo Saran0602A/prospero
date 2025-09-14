@@ -5,13 +5,16 @@ import { motion } from 'framer-motion';
 import { Inter } from '@next/font/google';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MdMailOutline, MdLock, MdPhone, MdArrowForward } from 'react-icons/md';
+import { MdMailOutline, MdLock, MdPhone } from 'react-icons/md';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
 
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 const supabase = createClientComponentClient();
 
 export default function SigninPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -32,7 +35,8 @@ export default function SigninPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      setSuccessMsg('Signed in successfully!');
+
+      router.push('/'); // ✅ Redirect after success
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
@@ -91,10 +95,8 @@ export default function SigninPage() {
     try {
       const { error } = await supabase.auth.verifyOtp({ phone, token: otp, type: 'sms' });
       if (error) throw error;
-      setSuccessMsg('Signed in successfully!');
-      setStep('default');
-      setPhone('');
-      setOtp('');
+
+      router.push('/'); // ✅ Redirect after OTP verify
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
@@ -104,7 +106,6 @@ export default function SigninPage() {
 
   return (
     <div className={`${inter.className} w-full min-h-screen grid grid-cols-1 md:grid-cols-2 bg-gray-100`}>
-      
       {/* Left Side - GIF */}
       <motion.div
         className="relative w-full h-80 md:h-full overflow-hidden"

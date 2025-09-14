@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import SmoothScroll from "./components/SmoothScroll";
 
 
 const geistSans = Geist({
@@ -14,8 +15,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Prospero",
-  description: "Your Way to Escape Poverty",
+  title: {
+    default: "ProsPero",
+    template: "%s | ProsPero",
+  },
+  description: "Join Prospero – your all-in-one platform to find local jobs, access free AI-powered scholarship programs, share your community achievements, and contribute to meaningful causes. Connect with nearby opportunities, showcase your social impact, and make a difference with Prospero’s easy-to-use platform.",
+  openGraph: {
+    title: "ProsPero",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ProsPero",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -28,7 +42,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
   );

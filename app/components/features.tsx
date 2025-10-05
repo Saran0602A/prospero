@@ -3,6 +3,7 @@
 import React from "react";
 import { Playfair_Display } from "@next/font/google";
 import { motion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -40,9 +41,11 @@ export default function Features() {
           }}
           className="md:w-1/2 flex justify-center mb-10 md:mb-0"
         >
-          <img
+          <Image
             src="/featureimg.png"
             alt="Prospero illustration"
+            width={500}
+            height={500}
             className="rounded-xl shadow-2xl w-[90%] md:w-[80%]"
           />
         </motion.div>

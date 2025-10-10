@@ -1,8 +1,10 @@
 "use client";
 
+import Link from 'next/link'
 import React from "react";
 import { Playfair_Display } from "@next/font/google";
 import { motion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -40,9 +42,11 @@ export default function Features() {
           }}
           className="md:w-1/2 flex justify-center mb-10 md:mb-0"
         >
-          <img
+          <Image
             src="/featureimg.png"
             alt="Prospero illustration"
+            width={500}
+            height={500}
             className="rounded-xl shadow-2xl w-[90%] md:w-[80%]"
           />
         </motion.div>
@@ -69,9 +73,9 @@ export default function Features() {
                 We provide free education for children and skill guidance for
                 adults, helping every learner unlock their true potential.
               </p>
-              <button className="px-4 py-2 text-sm rounded-lg bg-green-600 cursor-pointer text-white hover:bg-green-700 transition">
+              <Link href="/chat" className="px-4 py-2 text-sm rounded-lg bg-green-600 cursor-pointer text-white hover:bg-green-700 transition">
                 Learn More
-              </button>
+              </Link>
             </div>
           </motion.div>
 

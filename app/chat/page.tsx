@@ -4,234 +4,163 @@ import React, { useState, useEffect, useRef } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface Resource {
-  name: string;
-  location: string;
-  eligibility?: string;
-  benefit?: string;
-  website?: string;
-  contact?: string;
-}
-
 interface Message {
   role: "user" | "assistant";
   content: string;
-  top_resources?: Resource[];
-  skill?: string;
-  steps?: string[];
+  created_at?: string;
 }
 
 interface Session {
   id: string;
-  title?: string;
+  title: string;
   created_at: string;
 }
 
-const Chatbot = ({ userId }: { userId: string }) => {
+export default function Chatbot() {
   const supabase = createClientComponentClient();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Backend URL from environment variable
+  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://prospero-backend2.onrender.com";
+
+  // Fetch logged-in user
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        setUserId(data.user.id);
+        loadSessions(data.user.id);
+      }
+    };
+    getUser();
+  }, []);
+
+  // Load sessions, latest on top
+  const loadSessions = async (uid: string) => {
+    const res = await fetch(`${API_URL}/sessions/${uid}`);
+    const data = await res.json();
+    const sorted = data.sort(
+      (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    setSessions(sorted);
+  };
+
+  // Load messages for session
+  const loadMessages = async (sessionId: string) => {
+    setSelectedSession(sessionId);
+    const res = await fetch(`${API_URL}/messages/${sessionId}`);
+    const data = await res.json();
+    const sorted = data
+      .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      .map((m: any) => ({ role: m.role, content: m.content, created_at: m.created_at }));
+    setMessages(sorted);
+  };
+
+  // Send message
+  const sendMessage = async () => {
+    if (!input.trim() || !userId) return;
+    setMessages((prev) => [...prev, { role: "user", content: input }]);
+    setLoading(true);
+    let sid = selectedSession;
+
+    const res = await fetch(`${API_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: input, user_id: userId, session_id: sid }),
+    });
+
+    const data = await res.json();
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: data.answer || "⚠️ No response" },
+    ]);
+    setInput("");
+    setLoading(false);
+
+    if (!sid) {
+      setSelectedSession(data.session_id);
+      loadSessions(userId);
+    }
+  };
+
+  // Auto-scroll chat to bottom when messages update
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const loadSessions = async () => {
-    const { data, error } = await supabase
-      .from("chat_sessions")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-    if (!error && data) setSessions(data);
-  };
-
-  const loadSessionMessages = async (sessionId: string) => {
-    setSelectedSession(sessionId);
-    const { data, error } = await supabase
-      .from("chat_messages")
-      .select("*")
-      .eq("session_id", sessionId)
-      .order("created_at", { ascending: true });
-    if (!error && data) {
-      setMessages(
-        data.map((m: any) => ({
-          role: m.role,
-          content: m.content,
-        }))
-      );
-    }
-  };
-
-  useEffect(() => {
-    loadSessions();
-  }, []);
-
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    let sessionId = selectedSession;
-
-    // If no session selected, create new
-    if (!sessionId) {
-      const res = await fetch("http://127.0.0.1:8000/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input, user_id: userId }),
-      });
-      const data = await res.json();
-      sessionId = data.session_id || null;
-      setSelectedSession(sessionId);
-      loadSessions();
-    }
-
-    const userMessage: Message = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setLoading(true);
-
-    try {
-      const res = await fetch("http://127.0.0.1:8000/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: input,
-          user_id: userId,
-          session_id: sessionId,
-        }),
-      });
-      const data = await res.json();
-
-      const botMessage: Message = {
-        role: "assistant",
-        content: data.answer || "⚠️ No response",
-        top_resources: data.top_resources || [],
-        skill: data.skill,
-        steps: data.steps,
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-      loadSessions();
-    } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "⚠️ Could not reach server, try again later." },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!userId) return <p className="p-4 text-center text-gray-600">🔒 Please sign in to chat.</p>;
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-green-100 to-blue-100">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg p-4 overflow-y-auto">
-        <h2 className="font-bold text-lg mb-3">Your Sessions</h2>
-        {sessions.map((s) => (
-          <div
-            key={s.id}
-            className={`p-2 mb-2 rounded cursor-pointer ${
-              selectedSession === s.id ? "bg-green-200" : "bg-gray-100 hover:bg-green-100"
-            }`}
-            onClick={() => loadSessionMessages(s.id)}
-          >
-            {s.title || "New Chat"} <br />
-            <span className="text-xs text-gray-500">
-              {new Date(s.created_at).toLocaleString()}
-            </span>
-          </div>
-        ))}
+      <div className="w-64 bg-white shadow-md p-4 h-screen flex flex-col">
+        <button
+          onClick={() => (window.location.href = "/")}
+          className="flex items-center gap-2 cursor-pointer text-gray-700 font-semibold mb-4 hover:text-green-600"
+        >
+          <span className="text-xl">←</span>
+          <span>Back</span>
+        </button>
+
+        <h2 className="text-lg font-bold mb-4">💬 Your Sessions</h2>
+
+        <div className="flex-1 overflow-y-auto hover:overflow-y-auto space-y-2">
+          {sessions.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => loadMessages(s.id)}
+              className={`block w-full text-left p-2 rounded ${
+                selectedSession === s.id ? "bg-green-500 text-white" : "bg-gray-100 hover:bg-green-100"
+              }`}
+            >
+              {s.title || "Untitled"}
+              <br />
+              <span className="text-xs text-gray-500">
+                {new Date(s.created_at).toLocaleString()}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
-        <div className="flex-1 p-4 overflow-y-auto space-y-3 h-[90vh]">
+      <div className="flex-1 flex flex-col h-screen">
+        <div className="flex-1 p-4 overflow-y-auto">
           <AnimatePresence initial={false}>
             {messages.map((msg, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`my-2 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`px-4 py-2 rounded-xl max-w-[80%] text-sm shadow ${
+                  className={`p-3 rounded-2xl max-w-[70%] ${
                     msg.role === "user"
                       ? "bg-green-500 text-white rounded-br-none"
-                      : "bg-gray-200 text-gray-800 rounded-bl-none"
-                  }`}
+                      : "bg-white text-gray-800 rounded-bl-none"
+                  } shadow`}
                 >
-                  <p>{msg.content}</p>
-
-                  {msg.top_resources && msg.top_resources.length > 0 && (
-                    <div className="mt-2 space-y-2">
-                      {msg.top_resources.map((r, idx) => (
-                        <div
-                          key={idx}
-                          className="border p-2 rounded-lg bg-green-50 hover:bg-green-100 transition"
-                        >
-                          <p className="font-semibold text-green-700">
-                            {r.name} ({r.location})
-                          </p>
-                          {r.eligibility && <p className="text-xs">Eligibility: {r.eligibility}</p>}
-                          {r.benefit && <p className="text-xs">Benefit: {r.benefit}</p>}
-                          {r.website && (
-                            <p className="text-xs">
-                              Website:{" "}
-                              <a
-                                href={r.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline text-green-600"
-                              >
-                                Visit
-                              </a>
-                            </p>
-                          )}
-                          {r.contact && <p className="text-xs">Contact: {r.contact}</p>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {msg.steps && msg.steps.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {msg.steps.map((s, idx) => (
-                        <p key={idx}>{`${idx + 1}️⃣ ${s}`}</p>
-                      ))}
-                    </div>
-                  )}
+                  {msg.content}
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
-
-          {loading && (
-            <div className="flex justify-start">
-              <motion.div
-                className="px-4 py-2 bg-gray-200 text-gray-600 rounded-xl text-sm animate-pulse"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                Typing...
-              </motion.div>
-            </div>
-          )}
-
+          {loading && <p className="text-gray-500 animate-pulse">Typing...</p>}
           <div ref={chatEndRef}></div>
         </div>
 
-        {/* Input */}
-        <div className="flex items-center p-3 border-t border-gray-200">
+        <div className="p-4 border-t bg-white flex gap-2">
           <input
             type="text"
-            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="Ask about schools, universities, scholarships..."
+            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
+            placeholder="Ask about schools, universities, or skills..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
@@ -239,7 +168,7 @@ const Chatbot = ({ userId }: { userId: string }) => {
           <button
             onClick={sendMessage}
             disabled={loading}
-            className="ml-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-transform transform active:scale-95 disabled:bg-gray-400"
+            className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 disabled:bg-gray-400"
           >
             Send
           </button>
@@ -247,6 +176,4 @@ const Chatbot = ({ userId }: { userId: string }) => {
       </div>
     </div>
   );
-};
-
-export default Chatbot;
+}

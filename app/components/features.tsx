@@ -1,5 +1,6 @@
 "use client";
 
+import Link from 'next/link'
 import React from "react";
 import { Playfair_Display } from "@next/font/google";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -72,9 +73,9 @@ export default function Features() {
                 We provide free education for children and skill guidance for
                 adults, helping every learner unlock their true potential.
               </p>
-              <button className="px-4 py-2 text-sm rounded-lg bg-green-600 cursor-pointer text-white hover:bg-green-700 transition">
+              <Link href="/chat" className="px-4 py-2 text-sm rounded-lg bg-green-600 cursor-pointer text-white hover:bg-green-700 transition">
                 Learn More
-              </button>
+              </Link>
             </div>
           </motion.div>
 

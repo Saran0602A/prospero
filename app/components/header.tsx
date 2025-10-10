@@ -87,7 +87,7 @@ export default function Header() {
             Find
           </Link>
         )}
-        <Link href="/Chatbot" className="hover:text-[#14213d] transition-colors">ChatBot</Link>
+        <Link href="/chat" className="hover:text-[#14213d] transition-colors">Chatbot</Link>
         <Link href="/About" className="hover:text-[#14213d] transition-colors">About</Link>
         <Link href="/Contact" className="hover:text-[#14213d] transition-colors">Donations</Link>
       </nav>

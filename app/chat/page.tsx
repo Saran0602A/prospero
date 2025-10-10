@@ -26,8 +26,8 @@ export default function Chatbot() {
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Backend URL from environment variable
-  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://prospero-backend2.onrender.com";
+  // Backend URL
+  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL ;
 
   // Fetch logged-in user
   useEffect(() => {
@@ -41,7 +41,6 @@ export default function Chatbot() {
     getUser();
   }, []);
 
-  // Load sessions, latest on top
   const loadSessions = async (uid: string) => {
     const res = await fetch(`${API_URL}/sessions/${uid}`);
     const data = await res.json();
@@ -51,7 +50,6 @@ export default function Chatbot() {
     setSessions(sorted);
   };
 
-  // Load messages for session
   const loadMessages = async (sessionId: string) => {
     setSelectedSession(sessionId);
     const res = await fetch(`${API_URL}/messages/${sessionId}`);
@@ -62,34 +60,38 @@ export default function Chatbot() {
     setMessages(sorted);
   };
 
-  // Send message
   const sendMessage = async () => {
     if (!input.trim() || !userId) return;
     setMessages((prev) => [...prev, { role: "user", content: input }]);
     setLoading(true);
     let sid = selectedSession;
 
-    const res = await fetch(`${API_URL}/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: input, user_id: userId, session_id: sid }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input, user_id: userId, session_id: sid }),
+      });
 
-    const data = await res.json();
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: data.answer || "⚠️ No response" },
-    ]);
-    setInput("");
-    setLoading(false);
+      const data = await res.json();
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: data.answer || "⚠️ No response" },
+      ]);
+      setInput("");
 
-    if (!sid) {
-      setSelectedSession(data.session_id);
-      loadSessions(userId);
+      if (!sid && data.session_id) {
+        setSelectedSession(data.session_id);
+        loadSessions(userId);
+      }
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => [...prev, { role: "assistant", content: "⚠️ Server error" }]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Auto-scroll chat to bottom when messages update
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -110,7 +112,7 @@ export default function Chatbot() {
 
         <h2 className="text-lg font-bold mb-4">💬 Your Sessions</h2>
 
-        <div className="flex-1 overflow-y-auto hover:overflow-y-auto space-y-2">
+        <div className="flex-1 overflow-y-auto space-y-2">
           {sessions.map((s) => (
             <button
               key={s.id}

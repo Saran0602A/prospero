@@ -1,7 +1,9 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "./components/SmoothScroll";
+import ClientProvider from "./components/ClientProvider";
 
 
 const geistSans = Geist({
@@ -15,34 +17,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: "ProsPero",
-    template: "%s | ProsPero",
-  },
-  description: "Join Prospero – your all-in-one platform to find local jobs, access free AI-powered scholarship programs, share your community achievements, and contribute to meaningful causes. Connect with nearby opportunities, showcase your social impact, and make a difference with Prospero’s easy-to-use platform.",
-  openGraph: {
-    title: "ProsPero",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "ProsPero",
-  },
-  icons: {
-    icon: "/favicon.ico",
-  },
+  title: { default: "ProsPero", template: "%s | ProsPero" },
+  description:
+    "Join Prospero – your all-in-one platform to find local jobs, access free AI-powered scholarship programs, share your community achievements, and contribute to meaningful causes. Connect with nearby opportunities, showcase your social impact, and make a difference with Prospero’s easy-to-use platform.",
+  openGraph: { title: "ProsPero" },
+  twitter: { card: "summary_large_image", title: "ProsPero" },
+  icons: { icon: "/favicon.ico" },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <SmoothScroll>{children}</SmoothScroll>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <SmoothScroll>
+          <ClientProvider>{children}</ClientProvider>
+        </SmoothScroll>
       </body>
     </html>
   );

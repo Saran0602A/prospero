@@ -48,18 +48,11 @@ export default function Footer() {
         <div>
           <h2 className="text-2xl font-bold text-[#fca311] mb-4">Explore</h2>
           <ul className="space-y-2 text-gray-300 font-medium">
-            <li>
-              <Link href="/Find" className="hover:text-[#fca311] transition">Find</Link>
-            </li>
-            <li>
-              <Link href="/Offer" className="hover:text-[#fca311] transition">Offer</Link>
-            </li>
+           
             <li>
               <Link href="/About" className="hover:text-[#fca311] transition">About</Link>
             </li>
-            <li>
-              <Link href="/Contact" className="hover:text-[#fca311] transition">Contact</Link>
-            </li>
+          
             <li>
               <Link href="/Login" className="hover:text-[#fca311] transition">Login</Link>
             </li>

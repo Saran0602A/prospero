@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import React, { useState, useEffect, useRef } from 'react'
-import { Inter } from '@next/font/google'
+import { Inter } from 'next/font/google'
 import { FiMenu, FiX, FiLogOut } from 'react-icons/fi'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Session } from '@supabase/supabase-js'
@@ -83,13 +83,15 @@ export default function Header() {
       {/* Desktop Navigation */}
       <nav className="hidden md:flex space-x-8 text-lg font-medium text-[#1f1f1f]">
         {session?.user && (
-          <Link href={`/Find/${session.user.id}`} className="hover:text-[#14213d] transition-colors">
-            Find
+          <Link href={`/Feed/${session.user.id}`} className="hover:text-[#14213d] transition-colors">
+            Feed
           </Link>
         )}
         <Link href="/Chatbot" className="hover:text-[#14213d] transition-colors">ChatBot</Link>
         <Link href="/About" className="hover:text-[#14213d] transition-colors">About</Link>
-        <Link href="/Contact" className="hover:text-[#14213d] transition-colors">Donations</Link>
+         {session?.user && (
+        <Link href={`/Dasboard/${session.user.id}`} className="hover:text-[#14213d] transition-colors">DashBoard</Link>
+          )}
       </nav>
 
       {/* Desktop Auth */}

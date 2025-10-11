@@ -4,13 +4,22 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { motion } from 'framer-motion'
-import { MdWork, MdDescription, MdLink, MdSend } from 'react-icons/md'
+import { MdWork, MdDescription, MdLink, MdSend, MdInfoOutline } from 'react-icons/md'
 
 const supabase = createClientComponentClient()
 
-// --- Constants for Theme & Style (FIXED SCOPE) ---
-const PRIMARY_HEX = '#fca311'; // Prospero Orange (Hope/Action)
-const ACCENT_COLOR_TEXT = `text-[${PRIMARY_HEX}]`; // Defined here to be available globally in this file
+// --- TYPE DEFINITIONS ---
+interface JobDetails {
+    id: string;
+    title: string;
+    description: string | null;
+    posted_by: string; // The user ID of the employer
+}
+type SubmissionStatus = 'idle' | 'submitting' | 'success' | 'error';
+
+// --- Constants & Style ---
+const PRIMARY_HEX = '#fca311'; 
+const ACCENT_COLOR_TEXT = `text-[${PRIMARY_HEX}]`; 
 const ProsperoHeading = "text-3xl font-extrabold tracking-tight text-gray-900";
 const ProsperoSubHeading = "text-xl font-bold tracking-tight text-gray-800";
 
@@ -27,7 +36,7 @@ const CardWrapper = ({ children, className = '' }: { children: React.ReactNode, 
     </motion.div>
 )
 
-const TextAreaField = (props: any) => (
+const TextAreaField = (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
     <motion.textarea
         {...props}
         className="w-full p-4 rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-opacity-60 focus:ring-amber-400 resize-none transition duration-200 font-medium text-gray-800 placeholder-gray-500"
@@ -36,7 +45,7 @@ const TextAreaField = (props: any) => (
     />
 )
 
-const InputField = (props: any) => (
+const InputField = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
     <motion.input
         {...props}
         className="w-full p-4 rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-opacity-60 focus:ring-amber-400 transition duration-200 font-medium text-gray-800 placeholder-gray-500"
@@ -45,17 +54,19 @@ const InputField = (props: any) => (
 )
 
 
+// --- Main Component ---
 export default function ApplicationPage() {
     const params = useParams()
     const router = useRouter()
-    const jobId = params.id as string // The ID of the job being applied for
+    // Ensure jobId is treated as a string, or null if params.id is not available
+    const jobId = (params.id as string) || null 
 
-    const [jobDetails, setJobDetails] = useState<any>(null)
+    const [jobDetails, setJobDetails] = useState<JobDetails | null>(null)
     const [workerId, setWorkerId] = useState<string | null>(null)
     const [coverLetter, setCoverLetter] = useState('')
     const [portfolioUrl, setPortfolioUrl] = useState('')
     const [loading, setLoading] = useState(true)
-    const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
+    const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('idle')
     const [errorMessage, setErrorMessage] = useState('')
 
     // --- 1. Fetch Job Details and Current User ID ---
@@ -63,48 +74,58 @@ export default function ApplicationPage() {
         const fetchApplicationData = async () => {
             if (!jobId) {
                 setLoading(false);
-                setErrorMessage('Invalid Job ID.');
+                setErrorMessage('Invalid Job ID provided in the URL.');
                 return;
             }
 
-            // 1a. Attempt to get current user session/ID (Worker ID)
+            // 1a. Get current user session/ID (Reliable way)
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 setLoading(false);
-                setErrorMessage('You must be logged in to apply.');
+                // Redirect unauthenticated user to Sign In
+                router.replace('/Signin'); 
                 return;
             }
             setWorkerId(user.id);
-
+            const currentWorkerId = user.id; // Use local variable for immediate check
 
             // 1b. Fetch Job Details
             const { data: job, error: jobError } = await supabase
                 .from('jobs')
-                .select('title, description, posted_by')
+                .select('id, title, description, posted_by')
                 .eq('id', jobId)
+                .returns<JobDetails[]>()
                 .single();
 
             if (jobError || !job) {
-                setErrorMessage(jobError?.message || 'Job listing not found.');
-            } else {
-                setJobDetails(job);
+                setErrorMessage(jobError?.message || 'Job listing not found or accessible.');
+                setLoading(false);
+                return;
             }
+            
+            // 1c. Check if Worker is the Employer
+            if (job.posted_by === currentWorkerId) {
+                setErrorMessage("You are the employer who posted this job and cannot submit an application here.");
+            }
+
+            setJobDetails(job);
             setLoading(false);
         }
 
         fetchApplicationData();
-    }, [jobId]);
+    }, [jobId, router]);
     
     // --- 2. Handle Application Submission ---
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!workerId || !jobId) {
-            setErrorMessage("Worker or Job ID missing. Please log in.");
+        
+        if (!workerId || !jobDetails || jobDetails.posted_by === workerId) {
+            setErrorMessage("Cannot submit application due to missing user data or invalid job status.");
             return;
         }
-        
-        if (jobDetails?.posted_by === workerId) {
-            setErrorMessage("You cannot apply for a job you posted.");
+
+        if (!coverLetter.trim()) {
+            setErrorMessage("The cover letter is required.");
             return;
         }
 
@@ -112,10 +133,11 @@ export default function ApplicationPage() {
         setErrorMessage('');
 
         const applicationData = {
-            job_id: jobId,
+            job_id: jobDetails.id,
             worker_id: workerId,
             cover_letter: coverLetter,
-            portfolio_url: portfolioUrl,
+            portfolio_url: portfolioUrl || null, // Ensure empty string becomes null
+            // Default 'status' should be 'applied' based on your application schema
         };
 
         const { error } = await supabase
@@ -126,14 +148,17 @@ export default function ApplicationPage() {
             if (error.code === '23505') { // PostgreSQL unique constraint violation error code
                 setErrorMessage("You have already submitted an application for this job.");
             } else {
-                setErrorMessage(`Submission failed: ${error.message}`);
+                // Log detailed error but show a user-friendly message
+                console.error('Application submission error:', error);
+                setErrorMessage(`Submission failed. Please check the console for details.`);
             }
             setSubmissionStatus('error');
         } else {
             setSubmissionStatus('success');
+            // Redirect back to the feed after success
             setTimeout(() => {
-                router.push(`/Feed/${workerId}?status=applied`); // Redirect back to the feed after success
-            }, 3000);
+                router.push(`/Feed/${workerId}?status=applied`); 
+            }, 2500);
         }
     };
 
@@ -141,26 +166,35 @@ export default function ApplicationPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-stone-50 p-8 flex items-center justify-center">
-                <p className="text-xl font-medium text-gray-600">Loading Job Details...</p>
+                <p className="text-xl font-medium text-gray-600 flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Loading Job Details...
+                </p>
             </div>
         );
     }
 
-    // --- Error State ---
-    if (errorMessage && !jobDetails) {
+    // --- Error State (Critical failure or Job not found) ---
+    if (!jobDetails || errorMessage && submissionStatus === 'idle') {
         return (
             <div className="min-h-screen bg-stone-50 p-8 flex items-center justify-center">
                  <CardWrapper className="max-w-xl text-center">
-                    <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Job</h1>
-                    <p className="text-gray-700">{errorMessage}</p>
+                    <h1 className="text-2xl font-bold text-red-600 mb-4">Application Access Denied</h1>
+                    <p className="text-gray-700">{errorMessage || 'The requested job is not available or you are not authorized to view it.'}</p>
+                    <button onClick={() => router.back()} className="text-gray-600 hover:text-gray-900 transition duration-150 underline mt-4 block">
+                        &larr; Back to Job Feed
+                    </button>
                  </CardWrapper>
             </div>
         );
     }
     
-    // --- Dynamic SEO/Context Content ---
-    const jobTitle = jobDetails?.title || "Job Opportunity";
-    const jobDescSnippet = jobDetails?.description ? jobDetails.description.substring(0, 100) + '...' : 'A fulfilling new role.';
+    // --- Render Form ---
+    const isEmployerApplying = jobDetails.posted_by === workerId;
+    const isDisabled = submissionStatus !== 'idle' || isEmployerApplying;
 
     return (
         <div className="min-h-screen bg-stone-50 p-8 pt-12">
@@ -169,7 +203,7 @@ export default function ApplicationPage() {
                     Secure Application Portal
                 </h1>
                 <p className="text-xl text-gray-600 text-center mb-8">
-                    Applying for: **{jobTitle}**
+                    Applying for: **{jobDetails.title}**
                 </p>
 
                 <CardWrapper className="space-y-6">
@@ -179,9 +213,11 @@ export default function ApplicationPage() {
                             <MdWork className={`mr-2 text-2xl ${ACCENT_COLOR_TEXT}`} />
                             Role Context
                         </h2>
-                        <p className="text-base text-gray-700 font-medium">{jobDescSnippet}</p>
-                        <p className="text-sm text-gray-500 mt-2">
-                           Worker ID (Auto-filled): <span className="font-mono text-xs text-gray-900">{workerId}</span>
+                        <p className="text-base text-gray-700 font-medium">
+                            {jobDetails.description?.substring(0, 150) + '...' || 'Description unavailable.'}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-2 flex items-center">
+                           <MdInfoOutline className="mr-1" /> Worker ID (Auto-filled): <span className="font-mono text-xs text-gray-900 ml-1">{workerId}</span>
                         </p>
                     </div>
 
@@ -198,16 +234,16 @@ export default function ApplicationPage() {
                         {submissionStatus === 'error' && (
                             <div className="p-4 bg-red-100 text-red-800 rounded-xl font-bold">{errorMessage}</div>
                         )}
-                        {jobDetails?.posted_by === workerId && (
+                        {isEmployerApplying && (
                             <div className="p-4 bg-yellow-100 text-yellow-800 rounded-xl font-bold">
-                                You are the employer who posted this job. You cannot submit an application here.
+                                You are the employer who posted this job. Application is disabled.
                             </div>
                         )}
 
                         {/* Cover Letter */}
                         <div>
                             <label className="block text-lg font-bold mb-2 text-gray-800 flex items-center">
-                                <MdDescription className="mr-2" /> Your Motivation (Cover Letter)
+                                <MdDescription className="mr-2" /> Your Motivation (Cover Letter) <span className="text-red-500 ml-1">*</span>
                             </label>
                             <TextAreaField
                                 value={coverLetter}
@@ -215,7 +251,7 @@ export default function ApplicationPage() {
                                 placeholder="Explain your fit for this role and how it aligns with your path to prosperity."
                                 required
                                 rows={6}
-                                disabled={submissionStatus !== 'idle' || jobDetails?.posted_by === workerId}
+                                disabled={isDisabled}
                             />
                         </div>
 
@@ -229,19 +265,19 @@ export default function ApplicationPage() {
                                 value={portfolioUrl}
                                 onChange={e => setPortfolioUrl(e.target.value)}
                                 placeholder="Link to a resume, LinkedIn, or sample of your work."
-                                disabled={submissionStatus !== 'idle' || jobDetails?.posted_by === workerId}
+                                disabled={isDisabled}
                             />
                         </div>
 
                         {/* Submit Button */}
                         <motion.button
                             type="submit"
-                            disabled={submissionStatus !== 'idle' || jobDetails?.posted_by === workerId || !coverLetter.trim()}
+                            disabled={isDisabled || !coverLetter.trim()}
                             style={{ 
-                                backgroundColor: submissionStatus === 'idle' && coverLetter.trim() && jobDetails?.posted_by !== workerId ? PRIMARY_HEX : '#9ca3af'
+                                backgroundColor: isDisabled || !coverLetter.trim() ? '#9ca3af' : PRIMARY_HEX
                             }}
                             className="w-full px-4 py-4 text-xl font-bold text-white rounded-xl shadow-xl transition duration-200 disabled:opacity-50 flex items-center justify-center mt-6"
-                            whileTap={{ scale: submissionStatus === 'idle' ? 0.98 : 1 }}
+                            whileTap={{ scale: isDisabled ? 1 : 0.98 }}
                         >
                             <MdSend className="mr-2" /> 
                             {submissionStatus === 'submitting' ? 'Sending...' : 'Submit Application'}

@@ -751,23 +751,7 @@ const ProfileCard = () => (
         <div className="hidden lg:block w-1/4 sticky top-4 space-y-8">
             <ProfileCard />
 
-            <CardWrapper className="shadow-lg border-gray-200 p-6 border-l-4" style={{ borderColor: PRIMARY_HEX }}>
-                <h3 className="text-lg font-extrabold tracking-tight mb-4 flex items-center">
-                    <MdWork className={`text-xl mr-2 ${ACCENT_COLOR_TEXT}`} />
-                    Quick Resources
-                </h3>
-                <div className="space-y-3 text-base">
-                    <Link href="/Training" className="block text-gray-700 hover:text-blue-600 font-medium transition duration-150 flex items-center">
-                        <MdAccountCircle className="mr-2" /> Skill Training Hub
-                    </Link>
-                    <Link href="/Community" className="block text-gray-700 hover:text-blue-600 font-medium transition duration-150 flex items-center">
-                        <FaUserTie className="mr-2" /> Community Support
-                    </Link>
-                    <Link href="/Finance" className="block text-gray-700 hover:text-blue-600 font-medium transition duration-150 flex items-center">
-                        <MdAttachMoney className="mr-2" /> Financial Aid Info
-                    </Link>
-                </div>
-            </CardWrapper>
+           
         </div>
         
         {/* Right Column: Feed Content (Main focus, 75% width) */}

@@ -87,7 +87,7 @@ export default function Header() {
             Feed
           </Link>
         )}
-        <Link href="/Chatbot" className="hover:text-[#14213d] transition-colors">ChatBot</Link>
+        <Link href="/chat" className="hover:text-[#14213d] transition-colors">Chatbot</Link>
         <Link href="/About" className="hover:text-[#14213d] transition-colors">About</Link>
          {session?.user && (
         <Link href={`/Dasboard/${session.user.id}`} className="hover:text-[#14213d] transition-colors">DashBoard</Link>

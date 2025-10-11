@@ -4,6 +4,7 @@ import React, { useEffect, useState, ChangeEvent } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { motion } from "framer-motion"
 import { FiLogOut, FiEdit, FiArrowLeft, FiStar, FiUser, FiGlobe } from "react-icons/fi"
+import { MdClose } from "react-icons/md"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Database } from "@/types/supabase" // Assuming you generated types from your DB

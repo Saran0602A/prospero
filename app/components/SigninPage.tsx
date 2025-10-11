@@ -175,7 +175,7 @@ export default function SigninPage() {
         transition={{ duration: 1 }}
       >
         <Image 
-            src="/community_illustration.svg" // Replace with your actual image path
+            src="/hero2.jpg" // Replace with your actual image path
             alt="Community and prosperity illustration" 
             fill 
             className="object-cover object-center opacity-80" 

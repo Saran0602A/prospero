@@ -221,7 +221,7 @@ export default function ProsperaProfile({ userIdParam }: { userIdParam?: string 
     
     // If the current user is the poster, go to their dashboard/management view
     if (job.posted_by === currentUser.id) {
-        return router.push(`/Dashboard/${currentUser.id}`);
+        return router.push(`/Dasboard/${currentUser.id}`);
     }
     
     // Otherwise, assume it's a worker viewing a job they applied to or any user viewing the job detail

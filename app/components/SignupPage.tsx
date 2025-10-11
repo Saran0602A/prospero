@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Inter } from '@next/font/google';
+import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MdEmail, MdLock, MdPhone } from 'react-icons/md';

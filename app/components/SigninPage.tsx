@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { MdMailOutline, MdLock, MdPhone } from 'react-icons/md'
-import { Inter } from '@next/font/google'
+import { Inter } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 const supabase = createClientComponentClient()

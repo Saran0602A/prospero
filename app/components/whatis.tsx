@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Playfair_Display } from "@next/font/google";
+import { Playfair_Display } from "next/font/google";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 const playfair = Playfair_Display({

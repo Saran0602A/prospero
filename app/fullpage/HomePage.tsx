@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Inter } from '@next/font/google';
+import { Inter } from 'next/font/google';
 import Header from '../components/header';
 import Hero from '../components/hero';
 import Footer from '../components/footer';

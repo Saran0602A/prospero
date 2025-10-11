@@ -4,7 +4,6 @@ import React, { useEffect, useState, ChangeEvent } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { motion } from "framer-motion"
 import { FiLogOut, FiEdit, FiArrowLeft, FiStar, FiUser, FiGlobe } from "react-icons/fi"
-import { MdClose } from "react-icons/md"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Database } from "@/types/supabase" // Assuming you generated types from your DB
@@ -96,7 +95,7 @@ export default function ProsperaProfile({ userIdParam }: { userIdParam?: string 
         // 2. Fetch the current logged-in user's profile (for comparison/actions)
         if (loggedId) {
           const { data: currUserData } = await supabase
-            .from("users_data)
+            .from("users")
             .select("*")
             .eq("id", loggedId)
             .maybeSingle()
@@ -115,7 +114,7 @@ export default function ProsperaProfile({ userIdParam }: { userIdParam?: string 
         
         // 4. Fetch the primary user profile data (the one to display)
         const { data: profileData, error: profileError } = await supabase
-          .from(  "users_data")
+          .from("users")
           .select("*")
           .eq("id", profileId)
           .maybeSingle()
@@ -191,7 +190,7 @@ export default function ProsperaProfile({ userIdParam }: { userIdParam?: string 
         social_links: formData.social_links as any // Supabase jsonb column type is often "any"
       }
       
-      const { error } = await supabase.from("users_data").update(updates).eq("id", user.id)
+      const { error } = await supabase.from("users").update(updates).eq("id", user.id)
       
       if (error) throw error;
       

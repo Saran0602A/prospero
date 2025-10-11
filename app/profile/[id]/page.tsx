@@ -96,7 +96,7 @@ export default function ProsperaProfile({ userIdParam }: { userIdParam?: string 
         // 2. Fetch the current logged-in user's profile (for comparison/actions)
         if (loggedId) {
           const { data: currUserData } = await supabase
-            .from("users")
+            .from("users_data)
             .select("*")
             .eq("id", loggedId)
             .maybeSingle()
@@ -115,7 +115,7 @@ export default function ProsperaProfile({ userIdParam }: { userIdParam?: string 
         
         // 4. Fetch the primary user profile data (the one to display)
         const { data: profileData, error: profileError } = await supabase
-          .from("users")
+          .from(  "users_data")
           .select("*")
           .eq("id", profileId)
           .maybeSingle()
@@ -191,7 +191,7 @@ export default function ProsperaProfile({ userIdParam }: { userIdParam?: string 
         social_links: formData.social_links as any // Supabase jsonb column type is often "any"
       }
       
-      const { error } = await supabase.from("users").update(updates).eq("id", user.id)
+      const { error } = await supabase.from("users_data").update(updates).eq("id", user.id)
       
       if (error) throw error;
       

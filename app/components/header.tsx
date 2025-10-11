@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import React, { useState, useEffect, useRef } from 'react'
-import { Inter } from '@next/font/google'
+import { Inter } from 'next/font/google'
 import { FiMenu, FiX, FiLogOut } from 'react-icons/fi'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Session } from '@supabase/supabase-js'

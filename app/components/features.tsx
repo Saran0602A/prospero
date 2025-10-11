@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import React from "react";
-import { Playfair_Display } from "@next/font/google";
+import { Playfair_Display } from "next/font/google";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 

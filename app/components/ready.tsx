@@ -3,6 +3,7 @@
 import React from "react";
 import { Playfair_Display } from "next/font/google";
 import { motion, useScroll, useTransform } from "framer-motion";
+import Link from "next/link";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -79,7 +80,9 @@ export default function Ready() {
         whileTap={{ scale: 0.95 }}
         className="relative px-7 py-3 rounded-full bg-black text-white font-medium cursor-pointer transition shadow-lg overflow-hidden group z-10"
       >
-        <span className="relative z-10">Get Started →</span>
+        <Link href="/SignUp">
+          <span className="relative z-10">Get Started →</span>
+        </Link>
         {/* Shine Effect */}
         <motion.span
           initial={{ x: "-100%" }}

@@ -13,7 +13,7 @@ import { BiCalendar } from 'react-icons/bi'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 
-// --- 1. TYPE DEFINITIONS ---
+// --- 1. TYPE DEFINITIONS (Unchanged) ---
 
 interface UserProfile {
   id: string;
@@ -820,6 +820,17 @@ export default function FeedPage() {
         </CardWrapper>
     );
 
+    // --- Responsive State Logic ---
+    const [isMobile, setIsMobile] = useState(false);
+    
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+
     // --- Loading State ---
     const isInitialLoading = isFetchingJobs && isFetchingPosts && allJobs.length === 0 && allPosts.length === 0;
 
@@ -837,128 +848,172 @@ export default function FeedPage() {
         )
     }
 
+    // --- Layout Renderer ---
 
-    return (
-        <div className="min-h-screen p-4 bg-stone-50 font-sans">
-            <div className="max-w-7xl mx-auto flex gap-8">
+    const renderFeedContent = () => (
+        <>
+            {/* Header / Title */}
+            <h1 className="text-3xl font-extrabold text-[#000000] tracking-tight mb-6">
+                Pros<span className="text-[#14213d] font-medium">pero</span><sup className="text-[#14213d] font-bold text-xl">.</sup>
+            </h1>
 
-                {/* Left Column: Profile & Resources (25% width) */}
-                <div className="hidden lg:block w-1/4 sticky top-4 space-y-8 h-fit">
-                    <ProfileCard />
+            {/* Search Bar */}
+            <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mb-6">
+                <div className="relative flex items-center">
+                    <SearchInputField
+                        type="text"
+                        placeholder={view === 'jobs' ? "Search jobs by title, location, or poster..." : "Search posts by content, hashtag, or user..."}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                        <motion.button 
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-12 text-gray-400 hover:text-gray-600 transition"
+                            whileTap={{ scale: 0.9 }}
+                        >
+                            <MdClose className="text-2xl" />
+                        </motion.button>
+                    )}
+                    <MdSearch className="absolute right-4 text-gray-500 text-2xl" />
                 </div>
+            </motion.div>
 
-                {/* Right Column: Feed Content (Main focus, 75% width) */}
-                <div className="w-full lg:w-3/4">
-                    <h1 className="text-3xl font-extrabold text-[#000000] tracking-tight mb-6">
-                        Pros<span className="text-[#14213d] font-medium">pero</span><sup className="text-[#14213d] font-bold text-xl">.</sup>
-                    </h1>
+            {/* View Toggles (Tabs) */}
+            <div className="flex gap-2 mb-8 p-1 rounded-2xl bg-white shadow-xl border border-gray-200">
+                <motion.button
+                    onClick={() => { setView('jobs'); setSearchQuery(''); }}
+                    style={{ backgroundColor: view === 'jobs' ? PRIMARY_HEX : 'transparent', color: view === 'jobs' ? 'white' : '#1f2937' }}
+                    className={`flex-1 px-6 py-4 rounded-xl font-bold text-lg transition duration-200 ease-in-out shadow-lg`}
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                >
+                    Job Opportunities
+                </motion.button>
+                <motion.button
+                    onClick={() => { setView('posts'); setSearchQuery(''); }}
+                    style={{ backgroundColor: view === 'posts' ? PRIMARY_HEX : 'transparent', color: view === 'posts' ? 'white' : '#1f2937' }}
+                    className={`flex-1 px-6 py-4 rounded-xl font-bold text-lg transition duration-200 ease-in-out shadow-lg`}
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                >
+                    Community Discussion
+                </motion.button>
+            </div>
 
-                    {/* Search Bar */}
-                    <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mb-6">
-                        <div className="relative flex items-center">
-                            <SearchInputField
-                                type="text"
-                                placeholder={view === 'jobs' ? "Search jobs by title, location, or poster..." : "Search posts by content, hashtag, or user..."}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            {searchQuery && (
-                                <motion.button 
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute right-12 text-gray-400 hover:text-gray-600 transition"
-                                    whileTap={{ scale: 0.9 }}
-                                >
-                                    <MdClose className="text-2xl" />
-                                </motion.button>
-                            )}
-                            <MdSearch className="absolute right-4 text-gray-500 text-2xl" />
-                        </div>
-                    </motion.div>
+            {/* Content Feed Container */}
+            <motion.div
+                key={view}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, staggerChildren: 0.1 }}
+                ref={parent}
+            >
+                {view === 'jobs' && (
+                    <>
+                        {currentUser?.role === 'employer' && <AddJobForm currentUser={currentUser} onJob={handleNewJob} />}
 
-                    {/* View Toggles (Tabs) */}
-                    <div className="flex gap-2 mb-8 p-1 rounded-2xl bg-white shadow-xl border border-gray-200">
-                        <motion.button
-                            onClick={() => { setView('jobs'); setSearchQuery(''); }}
-                            style={{ backgroundColor: view === 'jobs' ? PRIMARY_HEX : 'transparent', color: view === 'jobs' ? 'white' : '#1f2937' }}
-                            className={`flex-1 px-6 py-4 rounded-xl font-bold text-lg transition duration-200 ease-in-out shadow-lg`}
-                            whileTap={{ scale: 0.98 }}
-                            whileHover={{ scale: 1.01 }}
-                        >
-                            Job Opportunities
-                        </motion.button>
-                        <motion.button
-                            onClick={() => { setView('posts'); setSearchQuery(''); }}
-                            style={{ backgroundColor: view === 'posts' ? PRIMARY_HEX : 'transparent', color: view === 'posts' ? 'white' : '#1f2937' }}
-                            className={`flex-1 px-6 py-4 rounded-xl font-bold text-lg transition duration-200 ease-in-out shadow-lg`}
-                            whileTap={{ scale: 0.98 }}
-                            whileHover={{ scale: 1.01 }}
-                        >
-                            Community Discussion
-                        </motion.button>
+                        {filteredJobs.map((job, index) => (
+                            <JobCard key={job.id} job={job} currentUser={currentUser} index={index} />
+                        ))}
+
+                        {filteredJobs.length === 0 && (
+                            <p className="text-center text-gray-500 mt-10 p-6 bg-white rounded-2xl shadow border border-gray-200">
+                                {searchQuery ? `No jobs found matching "${searchQuery}".` : "No current job openings match your search criteria."}
+                            </p>
+                        )}
+                        
+                        {hasNextJobsPage && (
+                            <motion.button
+                                onClick={() => fetchNextJobsPage()}
+                                disabled={isFetchingJobs}
+                                className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl mt-4 hover:bg-gray-300 disabled:opacity-50"
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                {isFetchingJobs ? 'Loading more...' : 'Load More Jobs'}
+                            </motion.button>
+                        )}
+                    </>
+                )}
+
+                {view === 'posts' && (
+                    <>
+                        <AddPost currentUser={currentUser} onPost={handleNewPost} />
+
+                        {filteredPosts.map((post, index) => (
+                            <PostCard key={post.id} post={post} currentUser={currentUser} index={index} />
+                        ))}
+
+                        {filteredPosts.length === 0 && (
+                            <p className="text-center text-gray-500 mt-10 p-6 bg-white rounded-2xl shadow border border-gray-200">
+                                {searchQuery ? `No posts found matching "${searchQuery}".` : "Be the first to share hope and advice with the community."}
+                            </p>
+                        )}
+
+                        {hasNextPostsPage && (
+                            <motion.button
+                                onClick={() => fetchNextPostsPage()}
+                                disabled={isFetchingPosts}
+                                className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl mt-4 hover:bg-gray-300 disabled:opacity-50"
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                {isFetchingPosts ? 'Loading more...' : 'Load More Posts'}
+                            </motion.button>
+                        )}
+                    </>
+                )}
+            </motion.div>
+        </>
+    )
+
+    // --- Desktop Layout (Original Two-Column View) ---
+    if (!isMobile) {
+        return (
+            <div className="min-h-screen p-4 bg-stone-50 font-sans">
+                {/* Desktop Back Button */}
+                <div className="max-w-7xl mx-auto pt-4 pb-6">
+                    <Link href='/'
+                        
+                        className="flex items-center gap-2 text-gray-700 font-semibold p-2 rounded hover:text-[#fca311] transition-colors"
+                    >
+                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Back to Home
+                    </Link>
+                </div>
+                <div className="max-w-7xl mx-auto flex gap-8">
+                    {/* Left Column: Profile & Resources (Fixed width) */}
+                    <div className="w-1/4 sticky top-4 space-y-8 h-fit">
+                        <ProfileCard />
                     </div>
 
-                    {/* Content Feed Container */}
-                    <motion.div
-                        key={view}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, staggerChildren: 0.1 }}
-                        ref={parent}
+                    {/* Right Column: Feed Content (Main focus) */}
+                    <div className="w-3/4">
+                        {renderFeedContent()}
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // --- Mobile Layout (Single-Column View with Back/Navigate) ---
+    return (
+        <div className="min-h-screen p-4 bg-stone-50 font-sans">
+            <div className="w-full max-w-xl mx-auto">
+                {/* Mobile Header/Back Navigation */}
+                <div className="flex items-center justify-between pb-4 border-b border-gray-300 mb-6 sticky top-0 bg-stone-50 z-10">
+                    <Link href='/'
+                        
+                        className="flex items-center gap-2 text-gray-700 font-semibold p-2 rounded hover:text-[#fca311] transition-colors"
                     >
-                        {view === 'jobs' && (
-                            <>
-                                {currentUser?.role === 'employer' && <AddJobForm currentUser={currentUser} onJob={handleNewJob} />}
-
-                                {filteredJobs.map((job, index) => (
-                                    <JobCard key={job.id} job={job} currentUser={currentUser} index={index} />
-                                ))}
-
-                                {filteredJobs.length === 0 && (
-                                    <p className="text-center text-gray-500 mt-10 p-6 bg-white rounded-2xl shadow border border-gray-200">
-                                        {searchQuery ? `No jobs found matching "${searchQuery}".` : "No current job openings match your search criteria."}
-                                    </p>
-                                )}
-                                
-                                {hasNextJobsPage && (
-                                    <motion.button
-                                        onClick={() => fetchNextJobsPage()}
-                                        disabled={isFetchingJobs}
-                                        className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl mt-4 hover:bg-gray-300 disabled:opacity-50"
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        {isFetchingJobs ? 'Loading more...' : 'Load More Jobs'}
-                                    </motion.button>
-                                )}
-                            </>
-                        )}
-
-                        {view === 'posts' && (
-                            <>
-                                <AddPost currentUser={currentUser} onPost={handleNewPost} />
-
-                                {filteredPosts.map((post, index) => (
-                                    <PostCard key={post.id} post={post} currentUser={currentUser} index={index} />
-                                ))}
-
-                                {filteredPosts.length === 0 && (
-                                    <p className="text-center text-gray-500 mt-10 p-6 bg-white rounded-2xl shadow border border-gray-200">
-                                        {searchQuery ? `No posts found matching "${searchQuery}".` : "Be the first to share hope and advice with the community."}
-                                    </p>
-                                )}
-
-                                {hasNextPostsPage && (
-                                    <motion.button
-                                        onClick={() => fetchNextPostsPage()}
-                                        disabled={isFetchingPosts}
-                                        className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl mt-4 hover:bg-gray-300 disabled:opacity-50"
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        {isFetchingPosts ? 'Loading more...' : 'Load More Posts'}
-                                    </motion.button>
-                                )}
-                            </>
-                        )}
-                    </motion.div>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Back to Home
+                    </Link>
+                </div>
+                
+                {/* Content - Profile Card removed for mobile */}
+                <div className="space-y-6">
+                    {/* Render the core feed content immediately below the back button */}
+                    {renderFeedContent()}
                 </div>
             </div>
         </div>

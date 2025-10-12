@@ -6,8 +6,9 @@ const PRIMARY_HEX = '#fca311'; // Prospera Orange
 const SECONDARY_BLUE = '#14213d'; // Dark Blue/LinkedIn style for text accents
 
 const TeamMember = ({ name, role, focus, icon, color }) => (
-    <div className="flex items-start space-x-4 p-5 rounded-xl border border-gray-100 bg-gray-50 shadow-md">
-        <div className="p-3 rounded-full text-white" style={{ backgroundColor: color }}>
+    // Responsive: Swaps to single column stack on small screens, back to horizontal on medium
+    <div className="flex flex-col sm:flex-row items-start space-x-0 sm:space-x-4 space-y-3 sm:space-y-0 p-5 rounded-xl border border-gray-100 bg-gray-50 shadow-md">
+        <div className="p-3 rounded-full text-white flex-shrink-0" style={{ backgroundColor: color }}>
             {icon}
         </div>
         <div>
@@ -32,34 +33,35 @@ const FeatureCard = ({ icon, title, description, color }) => (
 
 export default function AboutProspero() {
   return (
-    <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8 bg-stone-50">
+    <div className="max-w-7xl mx-auto py-8 sm:py-16 px-4 sm:px-6 lg:px-8 bg-stone-50">
       
       {/* Header & Mission Statement */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12 lg:mb-16">
         
         {/* Left: Mission Statement (High Impact) */}
-        <div className="space-y-6 lg:pt-10">
-          <h1 className="text-6xl font-extrabold tracking-tighter text-gray-900">
+        <div className="space-y-4 lg:space-y-6 lg:pt-10">
+          {/* Responsive Heading Size */}
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tighter text-gray-900 leading-tight">
             Walk Through the World With Us —
             <br />
             <span style={{ color: PRIMARY_HEX }}>Together, We Prosper.</span>
           </h1>
-          <blockquote className="text-xl italic font-medium text-gray-600 border-l-4 pl-4" style={{ borderColor: PRIMARY_HEX }}>
-            "At Prospera, we harness the power of AI and cutting-edge technology to break the cycle of poverty and create opportunities for all."
+          <blockquote className="text-lg sm:text-xl italic font-medium text-gray-600 border-l-4 pl-4" style={{ borderColor: PRIMARY_HEX }}>
+            "At **Prospera**, we harness the power of AI and cutting-edge technology to break the cycle of poverty and create opportunities for all."
           </blockquote>
         </div>
 
-        {/* Right: Static Info Box */}
-        <div className="p-8 rounded-3xl shadow-2xl space-y-6" style={{ backgroundColor: '#fffbe6' }}>
-            <h2 className="text-3xl font-bold text-gray-900">Our Vision</h2>
-            <p className="text-lg text-gray-700 leading-relaxed">
+        {/* Right: Static Info Box (Vision) */}
+        <div className="p-6 sm:p-8 rounded-3xl shadow-2xl space-y-4" style={{ backgroundColor: '#fffbe6' }}>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Our Vision</h2>
+            <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
                 Our mission is to build a world where every individual thrives — empowering communities, driving sustainable growth, and paving the way for a future without poverty.
             </p>
-            <p className="text-lg text-gray-700 leading-relaxed">
-                We blend the professional utility of LinkedIn for job searching and posting with a vital community hub for sharing discussions and best practices. The addition of our specialized AI Chatbot ensures every user has access to personalized guidance for studies, job preparedness, and best community practices.
+            <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+                We blend the professional utility of **LinkedIn** for job searching with a vital community hub. Our specialized **AI Chatbot** ensures every user has access to personalized guidance for job preparedness and community best practices.
             </p>
             
-            <div className="flex items-center space-x-3 text-lg font-bold" style={{ color: SECONDARY_BLUE }}>
+            <div className="flex items-center space-x-3 text-lg font-bold pt-2" style={{ color: SECONDARY_BLUE }}>
                 <FaRobot className="text-3xl" />
                 <span>AI-Powered Guidance & Opportunity.</span>
             </div>
@@ -67,11 +69,12 @@ export default function AboutProspero() {
       </section>
 
       {/* Team Section */}
-      <section className="mb-16">
-        <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-8 border-b pb-4">
+      <section className="mb-12 lg:mb-16">
+        <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-6 sm:mb-8 border-b pb-4">
             The Founding Team
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        {/* Responsive Grid: 1 column on small screens, 2 columns on medium screens */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
           
           <TeamMember
             name="Subham Kumar"
@@ -92,11 +95,12 @@ export default function AboutProspero() {
       </section>
 
       {/* Product Features Summary */}
-       <section className="mb-16">
-        <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-8 border-b pb-4">
+       <section className="mb-8 lg:mb-16">
+        <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-6 sm:mb-8 border-b pb-4">
             Our Core Technology Pillars
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Responsive Grid: 1 column on small, 3 columns on medium/large */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             <FeatureCard
                 icon={<FaDatabase className="text-2xl" />}
                 title="Supabase Implementation"
@@ -116,6 +120,18 @@ export default function AboutProspero() {
                 color="#059669"
             />
         </div>
+      </section>
+
+      {/* --- MIT License Section (Added for Compliance) --- */}
+      <section className="mt-16 pt-8 border-t border-gray-300 bg-white p-6 rounded-xl shadow-lg">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Software License (MIT)</h2>
+        <pre className="text-xs text-gray-600 whitespace-pre-wrap font-mono leading-relaxed bg-gray-50 p-4 rounded-lg overflow-x-auto">
+            {`Copyright 2025 Subham Kumar
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`}
+        </pre>
       </section>
     </div>
   );

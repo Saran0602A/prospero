@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaLaptopCode, FaDatabase, FaRobot, FaHandHoldingHeart } from 'react-icons/fa';
-import { MdOutlinePublic } from 'react-icons/md'; // MdOutlinePublic is unused but left in imports
+import { MdOutlinePublic } from 'react-icons/md';
 
 const PRIMARY_HEX = '#fca311'; // Prospera Orange
 const SECONDARY_BLUE = '#14213d'; // Dark Blue/LinkedIn style for text accents
@@ -120,6 +120,18 @@ export default function AboutProspero() {
                 color="#059669"
             />
         </div>
+      </section>
+
+      {/* --- MIT License Section (Added for Compliance) --- */}
+      <section className="mt-16 pt-8 border-t border-gray-300 bg-white p-6 rounded-xl shadow-lg">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Software License (MIT)</h2>
+        <pre className="text-xs text-gray-600 whitespace-pre-wrap font-mono leading-relaxed bg-gray-50 p-4 rounded-lg overflow-x-auto">
+            {`Copyright 2025 Subham Kumar
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`}
+        </pre>
       </section>
     </div>
   );

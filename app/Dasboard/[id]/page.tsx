@@ -19,13 +19,14 @@ import {
 import { motion } from 'framer-motion'
 import { MdClose, MdCheckCircle, MdCancel, MdAttachMoney, MdLocationOn, MdLink, MdAccountCircle } from 'react-icons/md'
 import { formatDistanceToNow, parseISO } from 'date-fns'
+import Link from 'next/link'
 
 // --- Supabase and Constants ---
 const supabase = createClientComponentClient()
 const PRIMARY_HEX = '#fca311'
 const GRAPH_COLORS = [PRIMARY_HEX, '#14213d', '#4F46E5', '#10B981']
 
-// --- Type Definitions for Data Structure (Crucial for TypeScript) ---
+// --- Type Definitions for Data Structure ---
 
 type UserRole = 'worker' | 'employer' | null
 type ApplicationStatus = 'applied' | 'accepted' | 'rejected'
@@ -46,11 +47,11 @@ interface Application {
   cover_letter: string | null
   portfolio_url: string | null
   created_at: string
-  worker?: WorkerProfile // Worker details are included when fetched by employer
-  job?: { id: number; title: string; pay: number; description: string; location: string } // Job details are included when fetched by worker
-  job_title?: string // Flattened for worker dashboard
-  job_pay?: number // Flattened for worker dashboard
-  job_location?: string // Flattened for worker dashboard
+  worker?: WorkerProfile 
+  job?: { id: number; title: string; pay: number; description: string; location: string } 
+  job_title?: string 
+  job_pay?: number 
+  job_location?: string 
 }
 
 interface Job {
@@ -60,7 +61,7 @@ interface Job {
   status: 'open' | 'in_progress' | 'completed'
   posted_by: string
   location: string
-  applicants?: Application[] // Applications linked to this job
+  applicants?: Application[] 
 }
 
 interface CurrentUser {
@@ -94,7 +95,7 @@ function ApplicationCard({ app, onUpdateStatus }: { app: Application; onUpdateSt
       </div>
 
       <p className="text-sm my-3">
-        **Motivation:** {app.cover_letter || 'No cover letter provided.'}
+       <span className='font-bold'>Motivation:</span>  {app.cover_letter || 'No cover letter provided.'}
       </p>
       {app.portfolio_url && (
         <a href={app.portfolio_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm hover:underline flex items-center">
@@ -103,7 +104,7 @@ function ApplicationCard({ app, onUpdateStatus }: { app: Application; onUpdateSt
       )}
 
       <div className="text-xs text-gray-600 mt-2">
-        <p>Rating: {worker?.rating || 'N/A'} | Trust: {worker?.trust_score || 'N/A'}</p>
+        <p><span className='font-bold'>Rating:</span> {worker?.rating || 'N/A'} | <span className='font-bold'>Trust:</span> {worker?.trust_score || 'N/A'}</p>
       </div>
 
       {isApplied && (
@@ -184,7 +185,7 @@ function WorkerDashboard({ applications, avgPay }: { applications: Application[]
   )
 }
 
-// --- Employer Dashboard View (Refactored DesktopDashboard) ---
+// --- Employer Dashboard View (Desktop) ---
 interface EmployerDashboardProps {
   jobs: Job[]
   selectedJob: Job | null
@@ -308,89 +309,98 @@ interface MobileDashboardProps {
 }
 
 function MobileDashboard({ jobs, selectedJob, setSelectedJob, handleUpdateStatus, renderCityPay, avgPay, PRIMARY_HEX, currentUserRole, applications }: MobileDashboardProps) {
+    const router = useRouter();
 
-  if (currentUserRole === 'worker') {
-    return (
-      <div className="p-4 bg-stone-50 min-h-screen">
-        <h1 className="text-2xl font-bold mb-6" style={{ color: PRIMARY_HEX }}>My Applications</h1>
-        <WorkerDashboard applications={applications} avgPay={avgPay} />
-      </div>
-    )
-  }
-
-  // Employer Mobile View
-  if (selectedJob) {
-    // Mobile Management View
-    return (
-      <div className="p-4 bg-stone-50 min-h-screen">
-        <h2 className={`text-xl font-bold mb-4`} style={{ color: PRIMARY_HEX }}>Managing: {selectedJob.title}</h2>
-        <button
-          onClick={() => setSelectedJob(null)}
-          className="text-gray-600 hover:text-gray-900 transition underline mb-4"
-        >
-          &larr; Back to Job List
-        </button>
-        <div className="space-y-4">
-          {selectedJob.applicants?.map(app => (
-            <ApplicationCard
-              key={app.id}
-              app={app}
-              onUpdateStatus={handleUpdateStatus}
-            />
-          ))}
-          {(selectedJob.applicants?.length || 0) === 0 && (
-            <div className="bg-white p-6 rounded-lg shadow-md"><p className="text-center text-gray-600">No applications received yet for this role.</p></div>
-          )}
+    const renderHeader = (title: string, backAction: () => void) => (
+        <div className="flex items-center justify-between pb-4 border-b border-gray-300 mb-6 sticky top-0 bg-stone-50 z-10">
+            <button
+                onClick={backAction}
+                className="flex items-center gap-2 text-gray-700 font-semibold p-2 rounded hover:bg-gray-200 transition-colors"
+            >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                {title}
+            </button>
         </div>
-      </div>
-    )
-  }
+    );
 
-  // Mobile Job List (Employer's Main Mobile View)
-  return (
-    <div className="p-4 bg-stone-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6" style={{ color: PRIMARY_HEX }}>Employer Overview</h1>
-
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="bg-white p-3 rounded-lg shadow border border-amber-500">
-            <h3 className="font-bold text-gray-600 text-xs">Total Jobs</h3>
-            <p className="text-2xl font-extrabold text-gray-900 mt-1">{jobs.length}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg shadow border border-green-500">
-            <h3 className="font-bold text-gray-600 text-xs">Avg Pay</h3>
-            <p className="text-2xl font-extrabold text-gray-900 mt-1">${avgPay}</p>
-          </div>
-        </div>
-
-        {jobs.map(job => (
-          <motion.div
-            key={job.id}
-            className="p-4 rounded-xl shadow-lg border border-gray-200 bg-white"
-            onClick={() => setSelectedJob(job)}
-            whileTap={{ scale: 0.98 }}
-            style={{ borderLeft: `5px solid ${PRIMARY_HEX}` }}
-          >
-            <div className="flex justify-between items-center mb-1">
-              <h2 className="font-bold text-lg">{job.title}</h2>
-              <span className="text-sm font-semibold">{job.status}</span>
+    if (currentUserRole === 'worker') {
+        return (
+            <div className="min-h-screen p-4 bg-stone-50 font-sans">
+                {renderHeader("Back to Home", () => router.push("/"))}
+                <WorkerDashboard applications={applications} avgPay={avgPay} />
             </div>
-            <p className="text-sm text-gray-600"><span className="font-bold">Apps:</span> {job.applicants?.length || 0}</p>
-            <p className="text-sm text-gray-600"><span className="font-bold">Pay:</span> ${job.pay}</p>
-            <p className="text-sm text-blue-500 mt-2 underline">Tap to Manage & View Applicants</p>
-          </motion.div>
-        ))}
+        )
+    }
 
-        <div className="mt-8">{renderCityPay()}</div>
-      </div>
-    </div>
-  )
+    // Employer Mobile View
+    if (selectedJob) {
+        // Mobile Application Management View
+        return (
+            <div className="min-h-screen p-4 bg-stone-50 font-sans">
+                {renderHeader("Back to Job List", () => setSelectedJob(null))}
+                <h2 className={`text-xl font-bold mb-4`} style={{ color: PRIMARY_HEX }}>Managing: {selectedJob.title}</h2>
+                <div className="space-y-4">
+                    {selectedJob.applicants?.map(app => (
+                        <ApplicationCard
+                            key={app.id}
+                            app={app}
+                            onUpdateStatus={handleUpdateStatus}
+                        />
+                    ))}
+                    {(selectedJob.applicants?.length || 0) === 0 && (
+                        <div className="bg-white p-6 rounded-lg shadow-md"><p className="text-center text-gray-600">No applications received yet for this role.</p></div>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
+    // Mobile Job List (Employer's Main Mobile View)
+    return (
+        <div className="min-h-screen p-4 bg-stone-50 font-sans">
+          
+            <h1 className="text-2xl font-bold mb-6" style={{ color: PRIMARY_HEX }}>Employer Overview</h1>
+
+            <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-white p-3 rounded-lg shadow border border-amber-500">
+                        <h3 className="font-bold text-gray-600 text-xs">Total Jobs</h3>
+                        <p className="text-2xl font-extrabold text-gray-900 mt-1">{jobs.length}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg shadow border border-green-500">
+                        <h3 className="font-bold text-gray-600 text-xs">Avg Pay</h3>
+                        <p className="text-2xl font-extrabold text-gray-900 mt-1">${avgPay}</p>
+                    </div>
+                </div>
+
+                {jobs.map(job => (
+                    <motion.div
+                        key={job.id}
+                        className="p-4 rounded-xl shadow-lg border border-gray-200 bg-white"
+                        onClick={() => setSelectedJob(job)}
+                        whileTap={{ scale: 0.98 }}
+                        style={{ borderLeft: `5px solid ${PRIMARY_HEX}` }}
+                    >
+                        <div className="flex justify-between items-center mb-1">
+                            <h2 className="font-bold text-lg">{job.title}</h2>
+                            <span className="text-sm font-semibold">{job.status}</span>
+                        </div>
+                        <p className="text-sm text-gray-600"><span className="font-bold">Apps:</span> {job.applicants?.length || 0}</p>
+                        <p className="text-sm text-gray-600"><span className="font-bold">Pay:</span> ${job.pay}</p>
+                        <p className="text-sm text-blue-500 mt-2 underline">Tap to Manage & View Applicants</p>
+                    </motion.div>
+                ))}
+
+                <div className="mt-8">{renderCityPay()}</div>
+            </div>
+        </div>
+    );
 }
+
 
 // --- Main Component ---
 export default function DashboardPage() {
   const router = useRouter()
-  // FIX: Removed `id` from `useParams()` since we use the session ID.
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [jobs, setJobs] = useState<Job[]>([]) // Employer Jobs
   const [applications, setApplications] = useState<Application[]>([]) // Worker Applications
@@ -405,7 +415,7 @@ export default function DashboardPage() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // --- Core Data Fetcher based on User Role (FIXED) ---
+  // --- Core Data Fetcher based on User Role ---
   const fetchDashboardData = async () => {
     setLoading(true)
     let userRole: UserRole = null
@@ -413,12 +423,11 @@ export default function DashboardPage() {
     let dashboardData: any[] = []
     let workerApps: Application[] = []
 
-    // 1. Get the authenticated user's session ID (THE FIX)
+    // 1. Get the authenticated user's session ID
     const { data: { user: authUser }, error: sessionError } = await supabase.auth.getUser()
 
     if (sessionError || !authUser) {
       console.error('Authentication Error: No active session found.', sessionError?.message)
-      // Redirect unauthenticated user to signin
       router.replace('/Signin')
       setLoading(false)
       return
@@ -435,8 +444,6 @@ export default function DashboardPage() {
 
     if (profileError || !userProfile) {
       console.error('Error fetching user profile:', profileError?.message || 'User profile not found in DB.')
-      // This is a critical error: user is logged in but has no profile record
-      // You might want to force them back to complete signup/profile creation
       setLoading(false)
       return
     }
@@ -503,7 +510,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData()
-  }, []) // Removed dependency on `id` from useParams
+  }, []) // Dependency array is clean
 
   // --- Utility Functions (Shared between components) ---
 
@@ -657,36 +664,50 @@ export default function DashboardPage() {
 
   // --- Main Render Switch ---
 
-  if (currentUser.role === 'worker') {
-    return isMobile
-      ? <MobileDashboard
-        jobs={[]} // Empty for worker
-        applications={applications}
-        currentUserRole={currentUser.role}
-        avgPay={avgPay}
-        renderCityPay={renderCityPay}
-        selectedJob={null} // Not applicable
-        setSelectedJob={() => { }} // Not applicable
-        handleUpdateStatus={() => { }} // Not applicable
-        PRIMARY_HEX={PRIMARY_HEX}
-      />
-      : <WorkerDashboard applications={applications} avgPay={avgPay} />
+  // Render Mobile Layout
+  if (isMobile) {
+    return (
+      <div className="min-h-screen p-4 bg-stone-50 font-sans">
+          <div className="w-full max-w-xl mx-auto">
+              {/* Mobile Header/Back Navigation (Removed Duplicate) */}
+              <div className="flex items-center justify-between pb-4 border-b border-gray-300 mb-6 sticky top-0 bg-stone-50 z-10">
+                  <Link
+                      href="/" // Navigate to the root/home path
+                      className="flex items-center gap-2 text-gray-700 font-semibold p-2 rounded hover:bg-gray-200 transition-colors"
+                  >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                      Back to Home
+                  </Link>
+              </div>
+              
+              {/* Content */}
+              <div className="space-y-6">
+                  <MobileDashboard
+                      jobs={jobs}
+                      applications={applications}
+                      currentUserRole={currentUser.role}
+                      avgPay={avgPay}
+                      renderCityPay={renderCityPay}
+                      selectedJob={selectedJob}
+                      setSelectedJob={setSelectedJob}
+                      handleUpdateStatus={handleUpdateStatus}
+                      PRIMARY_HEX={PRIMARY_HEX}
+                  />
+              </div>
+          </div>
+      </div>
+    )
   }
 
-  // Employer Render
-  return isMobile
-    ? <MobileDashboard
-      jobs={jobs}
-      applications={[]} // Empty for employer
-      currentUserRole={currentUser.role}
-      selectedJob={selectedJob}
-      setSelectedJob={setSelectedJob}
-      handleUpdateStatus={handleUpdateStatus}
-      renderCityPay={renderCityPay}
-      avgPay={avgPay}
-      PRIMARY_HEX={PRIMARY_HEX}
-    />
-    : <EmployerDashboard
+  // Render Desktop Layout (as it is)
+  if (currentUser.role === 'worker') {
+    return (
+        <WorkerDashboard applications={applications} avgPay={avgPay} />
+    )
+  }
+
+  return (
+    <EmployerDashboard
       jobs={jobs}
       selectedJob={selectedJob}
       setSelectedJob={setSelectedJob}
@@ -700,4 +721,5 @@ export default function DashboardPage() {
       PRIMARY_HEX={PRIMARY_HEX}
       GRAPH_COLORS={GRAPH_COLORS}
     />
+  )
 }

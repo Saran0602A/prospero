@@ -160,7 +160,7 @@ export default function SigninPage() {
 
           <p className="text-center text-gray-700 mt-6">
             Don't have an account?{' '}
-            <Link href="/Signup" className="font-bold hover:underline" style={{ color: PRIMARY_HEX }}>
+            <Link href="/SignUp" className="font-bold hover:underline" style={{ color: PRIMARY_HEX }}>
               Sign Up
             </Link>
           </p>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { motion } from 'framer-motion'
@@ -58,18 +58,19 @@ const InputField = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
 export default function ApplicationPage() {
     const params = useParams()
     const router = useRouter()
-    // Ensure jobId is treated as a string, or null if params.id is not available
+    
     const jobId = (params.id as string) || null 
 
     const [jobDetails, setJobDetails] = useState<JobDetails | null>(null)
     const [workerId, setWorkerId] = useState<string | null>(null)
+    const [workerName, setWorkerName] = useState<string | null>(null) // 🟢 NEW STATE FOR NAME
     const [coverLetter, setCoverLetter] = useState('')
     const [portfolioUrl, setPortfolioUrl] = useState('')
     const [loading, setLoading] = useState(true)
     const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('idle')
     const [errorMessage, setErrorMessage] = useState('')
 
-    // --- 1. Fetch Job Details and Current User ID ---
+    // --- 1. Fetch Job Details and Current User ID/Name ---
     useEffect(() => {
         const fetchApplicationData = async () => {
             if (!jobId) {
@@ -78,18 +79,26 @@ export default function ApplicationPage() {
                 return;
             }
 
-            // 1a. Get current user session/ID (Reliable way)
+            // 1a. Get current user session/ID (Worker ID)
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 setLoading(false);
-                // Redirect unauthenticated user to Sign In
                 router.replace('/Signin'); 
                 return;
             }
             setWorkerId(user.id);
-            const currentWorkerId = user.id; // Use local variable for immediate check
+            const currentWorkerId = user.id;
 
-            // 1b. Fetch Job Details
+            // 1b. Fetch Worker Name
+            const { data: workerProfile } = await supabase
+                .from('users') // Assuming 'users' holds the name
+                .select('name')
+                .eq('id', currentWorkerId)
+                .single();
+
+            setWorkerName(workerProfile?.name || 'Worker Profile');
+
+            // 1c. Fetch Job Details
             const { data: job, error: jobError } = await supabase
                 .from('jobs')
                 .select('id, title, description, posted_by')
@@ -103,7 +112,7 @@ export default function ApplicationPage() {
                 return;
             }
             
-            // 1c. Check if Worker is the Employer
+            // 1d. Check if Worker is the Employer
             if (job.posted_by === currentWorkerId) {
                 setErrorMessage("You are the employer who posted this job and cannot submit an application here.");
             }
@@ -136,8 +145,7 @@ export default function ApplicationPage() {
             job_id: jobDetails.id,
             worker_id: workerId,
             cover_letter: coverLetter,
-            portfolio_url: portfolioUrl || null, // Ensure empty string becomes null
-            // Default 'status' should be 'applied' based on your application schema
+            portfolio_url: portfolioUrl || null,
         };
 
         const { error } = await supabase
@@ -145,17 +153,15 @@ export default function ApplicationPage() {
             .insert(applicationData);
 
         if (error) {
-            if (error.code === '23505') { // PostgreSQL unique constraint violation error code
+            if (error.code === '23505') { 
                 setErrorMessage("You have already submitted an application for this job.");
             } else {
-                // Log detailed error but show a user-friendly message
                 console.error('Application submission error:', error);
                 setErrorMessage(`Submission failed. Please check the console for details.`);
             }
             setSubmissionStatus('error');
         } else {
             setSubmissionStatus('success');
-            // Redirect back to the feed after success
             setTimeout(() => {
                 router.push(`/Feed/${workerId}?status=applied`); 
             }, 2500);
@@ -203,7 +209,7 @@ export default function ApplicationPage() {
                     Secure Application Portal
                 </h1>
                 <p className="text-xl text-gray-600 text-center mb-8">
-                    Applying for: **{jobDetails.title}**
+                    Applying for: <span className='text-orange-500 font-bold'>{jobDetails.title}</span> 
                 </p>
 
                 <CardWrapper className="space-y-6">
@@ -216,8 +222,9 @@ export default function ApplicationPage() {
                         <p className="text-base text-gray-700 font-medium">
                             {jobDetails.description?.substring(0, 150) + '...' || 'Description unavailable.'}
                         </p>
+                        {/* 🟢 CHANGED: Display Worker Name instead of ID */}
                         <p className="text-sm text-gray-500 mt-2 flex items-center">
-                           <MdInfoOutline className="mr-1" /> Worker ID (Auto-filled): <span className="font-mono text-xs text-gray-900 ml-1">{workerId}</span>
+                           <MdInfoOutline className="mr-1" /> Applying as: <span className="font-bold text-gray-900 ml-1">{workerName}</span>
                         </p>
                     </div>
 

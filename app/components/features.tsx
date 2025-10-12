@@ -124,7 +124,7 @@ export default function Features() {
                 We provide free education for children and skill guidance for
                 adults, helping every learner unlock their true potential using our personalized chatbot.
               </p>
-              <Link href="/Chatbot" className="px-4 py-2 text-sm rounded-lg bg-green-600 cursor-pointer text-white hover:bg-green-700 transition">
+              <Link href="/About" className="px-4 py-2 text-sm rounded-lg bg-green-600 cursor-pointer text-white hover:bg-green-700 transition">
                 Learn More
               </Link>
             </div>
@@ -169,7 +169,7 @@ export default function Features() {
                 creating pathways to stable incomes and brighter futures.
               </p>
               {/* Using dynamic path based on login status */}
-              <Link href={findPath} className={`px-4 py-2 text-sm rounded-lg bg-blue-600 cursor-pointer text-white hover:bg-blue-700 transition`}>
+              <Link href="/Find"className={`px-4 py-2 text-sm rounded-lg bg-blue-600 cursor-pointer text-white hover:bg-blue-700 transition`}>
                 Explore Jobs
               </Link>
             </div>

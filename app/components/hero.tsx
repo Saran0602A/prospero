@@ -74,7 +74,7 @@ export default function Hero() {
 
         <motion.div variants={textFallVariants} custom={2}>
           <Link
-            href="/AboutUs"
+            href="/About"
             className="text-xl font-extrabold text-[#fca311] pt-2 md:pt-2 inline-block hover:translate-x-1 transition-transform duration-200"
           >
             Learn About Us →

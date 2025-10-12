@@ -10,13 +10,15 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const PROFILE_TABLE_NAME = (process.env.NEXT_PUBLIC_PROFILE_TABLE || 'users') as 'users'; 
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  // Use a sensible default avatar placeholder
+  const [avatarUrl, setAvatarUrl] = useState<string>('/default-avatar.png') 
 
   const supabase = createClientComponentClient()
   const router = useRouter()
@@ -29,18 +31,24 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Fetch session & user avatar
+  // Fetch session & user avatar (FIXED TABLE NAME)
   useEffect(() => {
     const fetchSession = async () => {
       const { data } = await supabase.auth.getSession()
       setSession(data.session)
+      
       if (data.session?.user) {
+        // --- FIX IS HERE ---
         const { data: userData } = await supabase
-          .from('users')
+          .from(PROFILE_TABLE_NAME) // ✅ Use conditional table name
           .select('avatar_url')
           .eq('id', data.session.user.id)
           .maybeSingle()
-        setAvatarUrl(userData?.avatar_url || null)
+        
+        // Ensure we handle null/undefined data safely
+        setAvatarUrl(userData?.avatar_url || '/default-avatar.png')
+      } else {
+        setAvatarUrl('/default-avatar.png');
       }
     }
     fetchSession()
@@ -87,7 +95,9 @@ export default function Header() {
             Feed
           </Link>
         )}
-        <Link href="/chat" className="hover:text-[#14213d] transition-colors">Chatbot</Link>
+          {session?.user && (
+        <Link href={`/chat/${session.user.id}`} className="hover:text-[#14213d] transition-colors">ChatBot</Link>
+          )}
         <Link href="/About" className="hover:text-[#14213d] transition-colors">About</Link>
          {session?.user && (
         <Link href={`/Dasboard/${session.user.id}`} className="hover:text-[#14213d] transition-colors">DashBoard</Link>
@@ -100,9 +110,9 @@ export default function Header() {
           <div ref={avatarRef} className="relative">
             {/* Avatar */}
             <img
-              src={avatarUrl || '/default-avatar.png'}
+              src={avatarUrl} // Using the state variable
               alt="Profile"
-              className="w-10 h-10 rounded-full cursor-pointer border-2 border-[#fca311]"
+              className="w-10 h-10 rounded-full cursor-pointer border-2 border-[#fca311] object-cover"
               onClick={() => setAvatarMenuOpen(prev => !prev)}
             />
 
@@ -112,17 +122,17 @@ export default function Header() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col"
+                className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col z-50"
               >
                 <button
                   onClick={() => router.push(`/profile/${session.user.id}`)}
-                  className="px-4 py-2 text-left hover:bg-[#fca311]/20"
+                  className="px-4 py-2 text-left text-gray-700 hover:bg-[#fca311]/20 transition-colors rounded-t-lg"
                 >
                   Go to Profile
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-2 text-left hover:bg-[#fca311]/20 flex items-center gap-1"
+                  className="px-4 py-2 text-left text-gray-700 hover:bg-[#fca311]/20 flex items-center gap-1 rounded-b-lg"
                 >
                   Logout <FiLogOut />
                 </button>
@@ -156,38 +166,42 @@ export default function Header() {
       </button>
 
       {/* Mobile Menu */}
-      <div
-        className={`fixed top-[75px] left-0 right-0 backdrop-blur-xl shadow-lg border-b border-white/30 transition-all duration-300 ease-in-out ${
-          isOpen
-            ? 'bg-white/90 opacity-100 visible translate-y-0'
-            : 'bg-white/30 opacity-0 invisible -translate-y-5'
-        }`}
+      <motion.div
+        initial={false}
+        animate={isOpen ? 'open' : 'closed'}
+        variants={{
+          open: { opacity: 1, y: 0, height: 'auto' },
+          closed: { opacity: 0, y: -50, height: 0 },
+        }}
+        transition={{ duration: 0.3 }}
+        className="fixed top-[75px] left-0 right-0 backdrop-blur-xl shadow-lg border-b border-white/30 overflow-hidden md:hidden"
       >
         <nav className="flex flex-col items-center space-y-5 py-6 text-xl font-semibold">
           {session?.user && (
             <Link
-              href={`/Find/${session.user.id}`}
+              href={`/Feed/${session.user.id}`}
               onClick={() => setIsOpen(false)}
+              className="text-gray-800 hover:text-[#14213d]"
             >
-              Find
+              Feed
             </Link>
           )}
-          <Link href="/Chatbot" onClick={() => setIsOpen(false)}>ChatBot</Link>
-          <Link href="/About" onClick={() => setIsOpen(false)}>About</Link>
-          <Link href="/Contact" onClick={() => setIsOpen(false)}>Donations</Link>
+          {session?.user && (  <Link href={`/chat/${session.user.id}`} onClick={() => setIsOpen(false)} className="text-gray-800 hover:text-[#14213d]">ChatBot</Link> )}
+          <Link href="/About" onClick={() => setIsOpen(false)} className="text-gray-800 hover:text-[#14213d]">About</Link>
+               {session?.user && (  <Link href={`/Dasboard/${session.user.id}`} onClick={() => setIsOpen(false)} className="text-gray-800 hover:text-[#14213d]">DashBoard</Link>)}
 
-          <div className="flex space-x-4">
+          <div className="flex space-x-4 pt-4">
             {session?.user ? (
               <>
                 <img
-                  src={avatarUrl || '/default-avatar.png'}
+                  src={avatarUrl}
                   alt="Profile"
-                  className="w-10 h-10 rounded-full border-2 border-[#fca311]"
-                  onClick={() => setAvatarMenuOpen(prev => !prev)}
+                  className="w-10 h-10 rounded-full border-2 border-[#fca311] object-cover"
+                  onClick={() => router.push(`/profile/${session.user.id}`)}
                 />
                 <button
                   onClick={() => { handleLogout(); setIsOpen(false) }}
-                  className="px-5 py-2 rounded-lg bg-[#fca311] text-white flex items-center gap-1"
+                  className="px-5 py-2 rounded-lg bg-[#fca311] text-white flex items-center gap-1 shadow-md hover:bg-amber-600 transition"
                 >
                   Logout <FiLogOut className="w-5 h-5" />
                 </button>
@@ -197,14 +211,14 @@ export default function Header() {
                 <Link
                   href="/Signin"
                   onClick={() => setIsOpen(false)}
-                  className="px-5 py-2 rounded-lg border border-[#14213d] text-[#14213d] hover:bg-[#14213d] hover:text-white transition-all"
+                  className="px-5 py-2 rounded-lg border border-[#14213d] text-[#14213d] hover:bg-[#14213d] hover:text-white transition-all shadow-sm"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/SignUp"
                   onClick={() => setIsOpen(false)}
-                  className="px-5 py-2 rounded-lg bg-[#14213d] text-white hover:bg-[#0d1b2a] transition-all"
+                  className="px-5 py-2 rounded-lg bg-[#14213d] text-white hover:bg-[#0d1b2a] transition-all shadow-sm"
                 >
                   Signup
                 </Link>
@@ -212,7 +226,7 @@ export default function Header() {
             )}
           </div>
         </nav>
-      </div>
+      </motion.div>
     </header>
   )
 }
